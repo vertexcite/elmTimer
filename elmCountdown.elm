@@ -19,20 +19,29 @@ update a m =
     Stop  -> { m | running = False }
     Reset -> { m | counter = 0 }
 
-startMailbox = Signal.mailbox 0
-stopMailbox  = Signal.mailbox 0
-resetMailbox = Signal.mailbox 0
+startMailbox = Signal.mailbox False
+stopMailbox  = Signal.mailbox False
+resetMailbox = Signal.mailbox False
 
-clock t start stop reset =
+view m =
   div []
-    [ button [ onClick startMailbox.address 1 ] [ text "start" ]
-    , div [] [ text (toString t) ]
-    , button [ onClick stopMailbox.address 1 ] [ text "stop" ]
-    , button [ onClick resetMailbox.address 1 ] [ text "reset" ]
+    [ button [ onClick startMailbox.address True ] [ text "start" ]
+    , div [] [ text (toString m.counter) ]
+    , button [ onClick stopMailbox.address True ] [ text "stop" ]
+    , button [ onClick resetMailbox.address True ] [ text "reset" ]
     ]
 
 
-model = Signal.foldp update model0 myMailbox.signal
+actionMaker : Float -> Bool -> Bool -> Bool -> Action
+actionMaker _ start stop reset =
+  if start then Start
+     else if stop then Stop
+          else if reset then Reset
+               else Increment
 
-main =
-  Signal.map4 clock (every second) startMailbox.signal stopMailbox.signal resetMailbox.signal
+actionSignal =
+  Signal.map4 actionMaker (every second) startMailbox.signal stopMailbox.signal resetMailbox.signal
+
+model = Signal.foldp update model0 actionSignal
+
+main = Signal.map view model
