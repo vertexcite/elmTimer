@@ -12,36 +12,26 @@ type Action = Increment | Start | Stop | Reset
 update : Action -> Model -> Model
 update a m =
   case a of
-    Incrememt -> 
+    Increment ->
       if not m.running then m
       else { m | counter = m.counter + 1 }
     Start -> { m | running = True }
     Stop  -> { m | running = False }
     Reset -> { m | counter = 0 }
 
-startMailbox = Signal.mailbox False
-stopMailbox  = Signal.mailbox False
-resetMailbox = Signal.mailbox False
+buttonsMailbox = Signal.mailbox Start
 
 view m =
   div []
-    [ button [ onClick startMailbox.address True ] [ text "start" ]
+    [ button [ onClick buttonsMailbox.address Start ] [ text "start" ]
     , div [] [ text (toString m.counter) ]
-    , button [ onClick stopMailbox.address True ] [ text "stop" ]
-    , button [ onClick resetMailbox.address True ] [ text "reset" ]
+    , button [ onClick buttonsMailbox.address Stop ] [ text "stop" ]
+    , button [ onClick buttonsMailbox.address Reset ] [ text "reset" ]
     ]
 
-
-actionMaker : Float -> Bool -> Bool -> Bool -> Action
-actionMaker _ start stop reset =
-  if start then Start
-     else if stop then Stop
-          else if reset then Reset
-               else Increment
-
-actionSignal =
-  Signal.map4 actionMaker (every second) startMailbox.signal stopMailbox.signal resetMailbox.signal
-
+incrementSignal = Signal.map (always Increment) (every second)
+allButtonsSignal = buttonsMailbox.signal
+actionSignal = Signal.merge incrementSignal allButtonsSignal
 model = Signal.foldp update model0 actionSignal
 
 main = Signal.map view model
