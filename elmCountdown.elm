@@ -4,33 +4,33 @@ import Html.Events exposing (onClick)
 import Html.Attributes exposing (disabled)
 
 
-type alias Model = { counter : Int, running : Bool }
+type alias Model = { startedTime : Float, currentTime : Float, running : Bool }
 
-model0 = {counter = 0, running = True }
+model0 = { startedTime = 0, currentTime = 0, running = False }
 
-type Action = Increment | Start | Stop | Reset
+type Action = Update Time | Start Time | Stop | Reset Time
 
 update : Action -> Model -> Model
 update a m =
   case a of
-    Increment ->
+    Update currentTime ->
       if not m.running then m
-      else { m | counter = m.counter + 1 }
-    Start -> { m | running = True }
+      else { m | currentTime = currentTime }
+    Start currentTime -> { m | running = True, currentTime = currentTime, startTime = currentTime }
     Stop  -> { m | running = False }
-    Reset -> { m | counter = 0 }
+    Reset currentTime -> { m | startedTime = currentTime, currentTime = currentTime }
 
 buttonsMailbox = Signal.mailbox Start
 
 view m =
   div []
-    [ button [ onClick buttonsMailbox.address Start, disabled m.running ] [ text "start" ]
-    , div [] [ text (toString m.counter) ]
+    [ button [ onClick buttonsMailbox.address <| Start m.currentTime, disabled m.running ] [ text "start" ]
+    , div [] [ text <| toString <| m.currentTime - m.startedTime ]
     , button [ onClick buttonsMailbox.address Stop , disabled <| not m.running ] [ text "stop" ]
-    , button [ onClick buttonsMailbox.address Reset ] [ text "reset" ]
+    , button [ onClick buttonsMailbox.address <| Reset m.currentTime ] [ text "reset" ]
     ]
 
-incrementSignal = Signal.map (always Increment) (every second)
+incrementSignal = Signal.map Update (every second)
 allButtonsSignal = buttonsMailbox.signal
 actionSignal = Signal.merge incrementSignal allButtonsSignal
 model = Signal.foldp update model0 actionSignal
