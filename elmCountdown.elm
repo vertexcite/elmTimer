@@ -1,6 +1,7 @@
 import Time exposing (..)
 import Html exposing (div, button, text)
 import Html.Events exposing (onClick)
+import Html.Attributes exposing (disabled)
 
 
 type alias Model = { counter : Int, running : Bool }
@@ -23,9 +24,9 @@ buttonsMailbox = Signal.mailbox Start
 
 view m =
   div []
-    [ button [ onClick buttonsMailbox.address Start ] [ text "start" ]
+    [ button [ onClick buttonsMailbox.address Start, disabled m.running ] [ text "start" ]
     , div [] [ text (toString m.counter) ]
-    , button [ onClick buttonsMailbox.address Stop ] [ text "stop" ]
+    , button [ onClick buttonsMailbox.address Stop , disabled <| not m.running ] [ text "stop" ]
     , button [ onClick buttonsMailbox.address Reset ] [ text "reset" ]
     ]
 
