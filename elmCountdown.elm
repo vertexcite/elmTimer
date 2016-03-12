@@ -55,7 +55,7 @@ buttonsMailbox : Signal.Mailbox ButtonAction
 buttonsMailbox = Signal.mailbox <| StartButton
 
 time : Signal.Signal Time
-time = every second
+time = every millisecond
 
 tickSignal : Signal.Signal Action
 tickSignal = Signal.map Update time
