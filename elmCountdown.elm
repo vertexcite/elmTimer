@@ -36,10 +36,11 @@ update a m =
           { m' | running = False  }
       Reset resetTime -> {m | lastUpdatedTime = resetTime, displayedTime = 0, lapTimes = [] }
       RecordLap lapTime ->
-        let
-          m' = displayTimeUpdater lapTime
-        in
-          {m' | lapTimes = m.displayedTime :: m.lapTimes }
+        if not m.running then m else
+          let
+            m' = displayTimeUpdater lapTime
+          in
+            {m' | lapTimes = m.displayedTime :: m.lapTimes }
 
 
 -- View
