@@ -44,11 +44,13 @@ update a m =
 
 
 -- View
+startButtonLabel : Model -> String
+startButtonLabel m = if m.running then "pause" else (if m.displayedTime == 0 then "start" else "continue")
 
 view : Model -> Html
 view m =
   div []
-    ([ button [ onClick buttonsMailbox.address <| if m.running then StopButton else StartButton] [ text <| if m.running then "pause" else "continue" ]
+    ([ button [ onClick buttonsMailbox.address <| if m.running then StopButton else StartButton] [ text <| startButtonLabel m ]
     , div [] [ text <| toString m.displayedTime ]
     , button [ onClick buttonsMailbox.address ResetButton ] [ text "reset" ]
     , button [ onClick buttonsMailbox.address RecordLapButton, disabled <| not m.running ] [ text "lap" ]
