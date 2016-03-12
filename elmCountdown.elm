@@ -3,6 +3,9 @@ import Html exposing (div, button, text, Html)
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (disabled)
 
+
+-- Model and Action data types
+
 type alias Model = { lastUpdatedTime : Time, displayedTime : Float, running : Bool }
 
 model0 = { lastUpdatedTime = 0, displayedTime = 0, running = False }
@@ -10,6 +13,8 @@ model0 = { lastUpdatedTime = 0, displayedTime = 0, running = False }
 type Action = Update Time | Start Time | Stop Time | Reset Time
 
 type ButtonAction = StartButton | StopButton | ResetButton
+
+-- Model update logic
 
 updateDisplayedTime : Model -> Time -> Model
 updateDisplayedTime m t = { m | displayedTime = m.displayedTime + t - m.lastUpdatedTime, lastUpdatedTime = t }
@@ -31,8 +36,8 @@ update a m =
           { m' | running = False  }
       Reset resetTime -> {m | lastUpdatedTime = resetTime, displayedTime = 0 }
 
-buttonsMailbox : Signal.Mailbox ButtonAction
-buttonsMailbox = Signal.mailbox <| StartButton
+
+-- View
 
 view : Model -> Html
 view m =
@@ -42,6 +47,12 @@ view m =
     , button [ onClick buttonsMailbox.address StopButton, disabled <| not m.running ] [ text "stop" ]
     , button [ onClick buttonsMailbox.address ResetButton ] [ text "reset" ]
     ]
+
+
+-- Signal wiring
+
+buttonsMailbox : Signal.Mailbox ButtonAction
+buttonsMailbox = Signal.mailbox <| StartButton
 
 time : Signal.Signal Time
 time = every second
