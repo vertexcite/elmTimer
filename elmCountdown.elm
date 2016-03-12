@@ -42,9 +42,8 @@ update a m =
 view : Model -> Html
 view m =
   div []
-    [ button [ onClick buttonsMailbox.address StartButton, disabled m.running ] [ text "start" ]
+    [ button [ onClick buttonsMailbox.address <| if m.running then StopButton else StartButton] [ text <| if m.running then "pause" else "continue" ]
     , div [] [ text <| toString <| m.displayedTime ]
-    , button [ onClick buttonsMailbox.address StopButton, disabled <| not m.running ] [ text "stop" ]
     , button [ onClick buttonsMailbox.address ResetButton ] [ text "reset" ]
     ]
 
