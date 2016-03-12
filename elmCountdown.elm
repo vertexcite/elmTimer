@@ -6,13 +6,13 @@ import Html.Attributes exposing (disabled)
 
 -- Model and Action data types
 
-type alias Model = { lastUpdatedTime : Time, displayedTime : Float, running : Bool }
+type alias Model = { lastUpdatedTime : Time, displayedTime : Float, running : Bool, lapTimes : List Float }
 
-model0 = { lastUpdatedTime = 0, displayedTime = 0, running = False }
+model0 = { lastUpdatedTime = 0, displayedTime = 0, running = False, lapTimes = [] }
 
-type Action = Update Time | Start Time | Stop Time | Reset Time
+type Action = Update Time | Start Time | Stop Time | Reset Time | RecordLap Time
 
-type ButtonAction = StartButton | StopButton | ResetButton
+type ButtonAction = StartButton | StopButton | ResetButton | RecordLapButton
 
 -- Model update logic
 
@@ -34,7 +34,12 @@ update a m =
           m' = displayTimeUpdater stopTime
         in
           { m' | running = False  }
-      Reset resetTime -> {m | lastUpdatedTime = resetTime, displayedTime = 0 }
+      Reset resetTime -> {m | lastUpdatedTime = resetTime, displayedTime = 0, lapTimes = [] }
+      RecordLap lapTime ->
+        let
+          m' = displayTimeUpdater lapTime
+        in
+          {m' | lapTimes = m.displayedTime :: m.lapTimes }
 
 
 -- View
@@ -42,10 +47,11 @@ update a m =
 view : Model -> Html
 view m =
   div []
-    [ button [ onClick buttonsMailbox.address <| if m.running then StopButton else StartButton] [ text <| if m.running then "pause" else "continue" ]
+    ([ button [ onClick buttonsMailbox.address <| if m.running then StopButton else StartButton] [ text <| if m.running then "pause" else "continue" ]
     , div [] [ text <| toString <| m.displayedTime ]
     , button [ onClick buttonsMailbox.address ResetButton ] [ text "reset" ]
-    ]
+    , button [ onClick buttonsMailbox.address RecordLapButton, disabled <| not m.running ] [ text "lap" ]
+    ] ++ List.map (\ t -> div [] [ text <| toString <| t]) m.lapTimes )
 
 
 -- Signal wiring
@@ -71,6 +77,7 @@ tagTimeOntoButtonAction time button =
     StartButton -> Start time
     StopButton  -> Stop  time
     ResetButton -> Reset time
+    RecordLapButton -> RecordLap time
 
 timedButtonActionSignal : Signal.Signal Action
 timedButtonActionSignal = Signal.map2 tagTimeOntoButtonAction buttonActionTime allButtonsSignal
