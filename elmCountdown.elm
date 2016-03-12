@@ -97,12 +97,5 @@ main = Signal.map view model
 
 -- Utilities
 
-zip : List a -> List b -> List (a,b)
-zip = List.map2 (,)
-
 firstDifferences : List Float -> List Float
-firstDifferences xs =
-  let
-    adjacentPairs = zip xs (Maybe.withDefault [] (List.tail xs))
-  in
-    List.map (\ (x0, x1) -> x1 - x0) adjacentPairs
+firstDifferences xs = (List.map2 (-)) (Maybe.withDefault [] (List.tail xs)) xs
