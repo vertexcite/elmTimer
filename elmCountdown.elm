@@ -1,38 +1,75 @@
 import Time exposing (..)
-import Html exposing (div, button, text)
+import Html exposing (div, button, text, Html)
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (disabled)
 
+type alias Model = { lastUpdatedTime : Time, displayedTime : Float, running : Bool }
 
-type alias Model = { startedTime : Float, currentTime : Float, running : Bool }
+model0 = { lastUpdatedTime = 0, displayedTime = 0, running = False }
 
-model0 = { startedTime = 0, currentTime = 0, running = False }
+type Action = Update Time | Start Time | Stop Time | Reset Time
 
-type Action = Update Time | Start Time | Stop | Reset Time
+type ButtonAction = StartButton | StopButton | ResetButton
+
+updateDisplayedTime : Model -> Time -> Model
+updateDisplayedTime m t = { m | displayedTime = m.displayedTime + t - m.lastUpdatedTime, lastUpdatedTime = t }
 
 update : Action -> Model -> Model
 update a m =
-  case a of
-    Update currentTime ->
-      if not m.running then m
-      else { m | currentTime = currentTime }
-    Start currentTime -> { m | running = True, currentTime = currentTime, startTime = currentTime }
-    Stop  -> { m | running = False }
-    Reset currentTime -> { m | startedTime = currentTime, currentTime = currentTime }
+  let
+    displayTimeUpdater = updateDisplayedTime m
+  in
+    case a of
+      Update currentTime ->
+        if not m.running then m
+        else displayTimeUpdater currentTime
+      Start startTime -> { m | lastUpdatedTime = startTime, running = True  }
+      Stop stopTime ->
+        let
+          m' = displayTimeUpdater stopTime
+        in
+          { m' | running = False  }
+      Reset resetTime -> {m | lastUpdatedTime = resetTime, displayedTime = 0 }
 
-buttonsMailbox = Signal.mailbox Start
+buttonsMailbox : Signal.Mailbox ButtonAction
+buttonsMailbox = Signal.mailbox <| StartButton
 
+view : Model -> Html
 view m =
   div []
-    [ button [ onClick buttonsMailbox.address <| Start m.currentTime, disabled m.running ] [ text "start" ]
-    , div [] [ text <| toString <| m.currentTime - m.startedTime ]
-    , button [ onClick buttonsMailbox.address Stop , disabled <| not m.running ] [ text "stop" ]
-    , button [ onClick buttonsMailbox.address <| Reset m.currentTime ] [ text "reset" ]
+    [ button [ onClick buttonsMailbox.address StartButton, disabled m.running ] [ text "start" ]
+    , div [] [ text <| toString <| m.displayedTime ]
+    , button [ onClick buttonsMailbox.address StopButton, disabled <| not m.running ] [ text "stop" ]
+    , button [ onClick buttonsMailbox.address ResetButton ] [ text "reset" ]
     ]
 
-incrementSignal = Signal.map Update (every second)
+time : Signal.Signal Time
+time = every second
+
+tickSignal : Signal.Signal Action
+tickSignal = Signal.map Update time
+
+allButtonsSignal : Signal.Signal ButtonAction
 allButtonsSignal = buttonsMailbox.signal
-actionSignal = Signal.merge incrementSignal allButtonsSignal
+
+buttonActionTime : Signal.Signal Time
+buttonActionTime = Signal.sampleOn allButtonsSignal time
+
+tagTimeOntoButtonAction : Time -> ButtonAction -> Action
+tagTimeOntoButtonAction time button =
+  case button of
+    StartButton -> Start time
+    StopButton  -> Stop  time
+    ResetButton -> Reset time
+
+timedButtonActionSignal : Signal.Signal Action
+timedButtonActionSignal = Signal.map2 tagTimeOntoButtonAction buttonActionTime allButtonsSignal
+
+actionSignal : Signal.Signal Action
+actionSignal = Signal.merge tickSignal timedButtonActionSignal
+
+model : Signal.Signal Model
 model = Signal.foldp update model0 actionSignal
 
+main : Signal.Signal Html
 main = Signal.map view model
