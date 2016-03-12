@@ -60,7 +60,7 @@ view m =
 -- Signal wiring
 
 buttonsMailbox : Signal.Mailbox ButtonAction
-buttonsMailbox = Signal.mailbox <| StartButton
+buttonsMailbox = Signal.mailbox StartButton
 
 time : Signal.Signal Time
 time = every millisecond
