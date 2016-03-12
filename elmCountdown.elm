@@ -49,10 +49,10 @@ view : Model -> Html
 view m =
   div []
     ([ button [ onClick buttonsMailbox.address <| if m.running then StopButton else StartButton] [ text <| if m.running then "pause" else "continue" ]
-    , div [] [ text <| toString <| m.displayedTime ]
+    , div [] [ text <| toString m.displayedTime ]
     , button [ onClick buttonsMailbox.address ResetButton ] [ text "reset" ]
     , button [ onClick buttonsMailbox.address RecordLapButton, disabled <| not m.running ] [ text "lap" ]
-    ] ++ List.map (\ t -> div [] [ text <| toString <| t]) m.lapTimes )
+    ] ++ List.map (\ t -> div [] [ text <| toString t]) m.lapTimes )
 
 
 -- Signal wiring
