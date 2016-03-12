@@ -52,7 +52,7 @@ view m =
     , div [] [ text <| toString m.displayedTime ]
     , button [ onClick buttonsMailbox.address ResetButton ] [ text "reset" ]
     , button [ onClick buttonsMailbox.address RecordLapButton, disabled <| not m.running ] [ text "lap" ]
-    ] ++ List.map (\ t -> div [] [ text <| toString t]) m.lapTimes )
+    ] ++ (List.map (\ t -> div [] [ text <| toString t]) <| List.reverse m.lapTimes ))
 
 
 -- Signal wiring
