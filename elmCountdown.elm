@@ -8,7 +8,7 @@ import Html.Attributes exposing (disabled)
 
 type alias Model = { lastUpdatedTime : Time, displayedTime : Float, running : Bool, lapTimes : List Float }
 
-model0 = { lastUpdatedTime = 0, displayedTime = 0, running = False, lapTimes = [] }
+model0 = { lastUpdatedTime = 0, displayedTime = 0, running = False, lapTimes = [0] }
 
 type Action = Update Time | Start Time | Stop Time | Reset Time | RecordLap Time
 
@@ -34,7 +34,7 @@ update a m =
           m' = displayTimeUpdater stopTime
         in
           { m' | running = False  }
-      Reset resetTime -> {m | lastUpdatedTime = resetTime, displayedTime = 0, lapTimes = [] }
+      Reset resetTime -> {m | lastUpdatedTime = resetTime, displayedTime = 0, lapTimes = [0] }
       RecordLap lapTime ->
         if not m.running then m else
           let
@@ -54,7 +54,7 @@ view m =
     , div [] [ text <| toString m.displayedTime ]
     , button [ onClick buttonsMailbox.address ResetButton ] [ text "reset" ]
     , button [ onClick buttonsMailbox.address RecordLapButton, disabled <| not m.running ] [ text "lap" ]
-    ] ++ (List.map (\ t -> div [] [ text <| toString t]) <| List.reverse m.lapTimes ))
+    ] ++ (List.map (\ t -> div [] [ text <| toString t]) <| firstDifferences (List.reverse m.lapTimes )))
 
 
 -- Signal wiring
@@ -93,3 +93,16 @@ model = Signal.foldp update model0 actionSignal
 
 main : Signal.Signal Html
 main = Signal.map view model
+
+
+-- Utilities
+
+zip : List a -> List b -> List (a,b)
+zip = List.map2 (,)
+
+firstDifferences : List Float -> List Float
+firstDifferences xs =
+  let
+    adjacentPairs = zip xs (Maybe.withDefault [] (List.tail xs))
+  in
+    List.map (\ (x0, x1) -> x1 - x0) adjacentPairs
